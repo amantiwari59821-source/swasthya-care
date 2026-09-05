@@ -1528,7 +1528,7 @@ async function handleCalculate(e) {
         document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
       }
     }
-  } catch (err) {
+   catch (err) {
     console.error('Error during calculation:', err);
     alert('Server connection error. Please try again.');
   } finally {
