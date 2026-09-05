@@ -1527,8 +1527,6 @@ async function handleCalculate(e) {
       if (window.innerWidth < 1024) {
         document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
       }
-    } else {
-      alert(result.message || 'Calculation error');
     }
   } catch (err) {
     console.error('Error during calculation:', err);
