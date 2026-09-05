@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupLanguageToggle() {
   const btn = document.getElementById('langToggleBtn');
   const btnText = document.getElementById('langBtnText');
+  if (!btn || !btnText) return;
   
   btn.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'hi' : 'en';

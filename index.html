@@ -1340,6 +1340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupLanguageToggle() {
   const btn = document.getElementById('langToggleBtn');
   const btnText = document.getElementById('langBtnText');
+  if (!btn || !btnText) return;
   
   btn.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'hi' : 'en';
@@ -1520,15 +1521,18 @@ async function handleCalculate(e) {
   
   try {
     const calcData = clientCalculateDosage(diseaseId, ageYears, ageMonths, weightKg, tempF, gender, isPregnant, trimester, isBreastfeeding, comorbidities);
-    currentCalculationResult = calcData;
-    renderResults(calcData);
+    if (calcData) {
+      currentCalculationResult = calcData;
+      renderResults(calcData);
       
       // Scroll smoothly on mobile
       if (window.innerWidth < 1024) {
         document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
-      
-     }
-  }catch (err) {
+      }
+    } else {
+      alert('Calculation error. Please check inputs.');
+    }
+  } catch (err) {
     console.error('Error during calculation:', err);
     alert('Server connection error. Please try again.');
   } finally {

@@ -1,14 +1,43 @@
-﻿import os
+import os
 import json
 from flask import Flask, render_template, request, jsonify
 from calculator import calculate_dosage, load_db, estimate_child_weight
 
-app = Flask(__name__)
+# Smart template and static paths (supports both subfolders and flat root)
+template_dir = 'templates' if os.path.exists(os.path.join(os.path.dirname(__file__), 'templates', 'index.html')) else '.'
+static_dir = 'static' if os.path.exists(os.path.join(os.path.dirname(__file__), 'static', 'css', 'styles.css')) else '.'
+
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir, static_url_path='/static')
 
 @app.route('/')
 def index():
     db = load_db()
     return render_template('index.html', diseases=db.get('diseases', []))
+
+@app.route('/standalone')
+@app.route('/offline')
+def standalone():
+    from flask import send_file
+    standalone_path = os.path.join(os.path.dirname(__file__), 'standalone.html')
+    return send_file(standalone_path)
+
+@app.route('/static/css/styles.css')
+@app.route('/styles.css')
+def root_css():
+    from flask import send_from_directory
+    root_dir = os.path.dirname(__file__)
+    if os.path.exists(os.path.join(root_dir, 'static', 'css', 'styles.css')):
+        return send_from_directory(os.path.join(root_dir, 'static', 'css'), 'styles.css')
+    return send_from_directory(root_dir, 'styles.css')
+
+@app.route('/static/js/app.js')
+@app.route('/app.js')
+def root_js():
+    from flask import send_from_directory
+    root_dir = os.path.dirname(__file__)
+    if os.path.exists(os.path.join(root_dir, 'static', 'js', 'app.js')):
+        return send_from_directory(os.path.join(root_dir, 'static', 'js'), 'app.js')
+    return send_from_directory(root_dir, 'app.js')
 
 @app.route('/api/diseases', methods=['GET'])
 def get_diseases():

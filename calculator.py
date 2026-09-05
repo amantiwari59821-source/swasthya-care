@@ -1,11 +1,16 @@
-﻿import json
+import json
 import os
 import math
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'medicines_db.json')
 
 def load_db():
-    with open(DB_PATH, 'r', encoding='utf-8') as f:
+    target_path = DB_PATH
+    if not os.path.exists(target_path):
+        root_path = os.path.join(os.path.dirname(__file__), 'medicines_db.json')
+        if os.path.exists(root_path):
+            target_path = root_path
+    with open(target_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def estimate_child_weight(age_in_years):
