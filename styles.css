@@ -1,0 +1,125 @@
+/* Custom styles for SwasthyaCare */
+:root {
+  --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom disease card active state */
+.disease-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.disease-card:hover {
+  transform: translateY(-2px);
+}
+
+.disease-card.active {
+  border-color: #0d9488 !important;
+  background-color: #f0fdfa !important;
+  box-shadow: 0 4px 12px -2px rgba(13, 148, 136, 0.15);
+}
+
+.disease-card.active .disease-icon {
+  background-color: #0d9488 !important;
+  color: #ffffff !important;
+}
+
+/* Formulation highlight box */
+.formulation-row {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.formulation-row:hover {
+  transform: translateX(3px);
+  background-color: #f1f5f9;
+}
+
+/* Decorative Medicine Card Styles */
+.dose-card-first-line {
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08), 0 4px 6px -2px rgba(16, 185, 129, 0.04);
+}
+
+.dose-card-contraindicated {
+  border-color: #fca5a5 !important;
+  background-color: #fffafb !important;
+  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.08);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.35s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+
+  /* Hide non-printable elements */
+  header,
+  footer,
+  .no-print,
+  #calculator-section > div > div:first-child, /* Hide input form */
+  #emptyState,
+  #quick-guide-section,
+  .bg-rose-600 /* top bar */ {
+    display: none !important;
+  }
+
+  #calculator-section {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #calculator-section > div {
+    display: block !important;
+  }
+
+  .lg\:col-span-7 {
+    width: 100% !important;
+  }
+
+  #resultsContainer {
+    display: block !important;
+    space-y: 12pt !important;
+  }
+
+  .printable-header {
+    border-bottom: 2px solid #0d9488 !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Custom 2xs text utility */
+.text-2xs {
+  font-size: 0.6875rem;
+  line-height: 0.95rem;
+}
