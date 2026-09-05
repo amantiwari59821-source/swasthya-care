@@ -1526,9 +1526,9 @@ async function handleCalculate(e) {
       // Scroll smoothly on mobile
       if (window.innerWidth < 1024) {
         document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-   catch (err) {
+      
+     }
+  }catch (err) {
     console.error('Error during calculation:', err);
     alert('Server connection error. Please try again.');
   } finally {
