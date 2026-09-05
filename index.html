@@ -16,7 +16,134 @@
   
   <!-- SVG Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%230d9488'/><path d='M35 50h30M50 35v30' stroke='white' stroke-width='12' stroke-linecap='round'/></svg>">
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+/* Custom styles for SwasthyaCare */
+:root {
+  --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom disease card active state */
+.disease-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.disease-card:hover {
+  transform: translateY(-2px);
+}
+
+.disease-card.active {
+  border-color: #0d9488 !important;
+  background-color: #f0fdfa !important;
+  box-shadow: 0 4px 12px -2px rgba(13, 148, 136, 0.15);
+}
+
+.disease-card.active .disease-icon {
+  background-color: #0d9488 !important;
+  color: #ffffff !important;
+}
+
+/* Formulation highlight box */
+.formulation-row {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.formulation-row:hover {
+  transform: translateX(3px);
+  background-color: #f1f5f9;
+}
+
+/* Decorative Medicine Card Styles */
+.dose-card-first-line {
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08), 0 4px 6px -2px rgba(16, 185, 129, 0.04);
+}
+
+.dose-card-contraindicated {
+  border-color: #fca5a5 !important;
+  background-color: #fffafb !important;
+  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.08);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.35s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+
+  /* Hide non-printable elements */
+  header,
+  footer,
+  .no-print,
+  #calculator-section > div > div:first-child, /* Hide input form */
+  #emptyState,
+  #quick-guide-section,
+  .bg-rose-600 /* top bar */ {
+    display: none !important;
+  }
+
+  #calculator-section {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #calculator-section > div {
+    display: block !important;
+  }
+
+  .lg\:col-span-7 {
+    width: 100% !important;
+  }
+
+  #resultsContainer {
+    display: block !important;
+    space-y: 12pt !important;
+  }
+
+  .printable-header {
+    border-bottom: 2px solid #0d9488 !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Custom 2xs text utility */
+.text-2xs {
+  font-size: 0.6875rem;
+  line-height: 0.95rem;
+}
+
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
@@ -535,6 +662,1300 @@
     </div>
   </footer>
 
-  <script src="/static/js/app.js"></script>
+  <script>
+
+const OFFLINE_DB = {
+  "diseases": [
+    {
+      "id": "fever",
+      "name_en": "Fever / High Temperature",
+      "name_hi": "बुखार (Fever / High Temperature)",
+      "category": "common",
+      "icon": "fa-temperature-high",
+      "color": "rose",
+      "description_en": "Elevated body temperature above 99.5°F (37.5°C), often caused by viral infections, teething, or immunization.",
+      "description_hi": "शरीर का तापमान 99.5°F से अधिक होना, जो आमतौर पर वायरल संक्रमण, दांत निकलने या टीके के बाद होता है।",
+      "red_flags": [
+        "Fever over 102°F (38.9°C) that does not come down with medicine / बुखार 102°F से ज्यादा होना",
+        "Baby under 3 months with fever above 100.4°F (38°C) needs IMMEDIATE emergency care / 3 महीने से छोटे शिशु को बुखार होने पर तुरंत अस्पताल ले जाएं",
+        "Child is drowsy, unresponsive, having convulsions (seizures), or stiff neck / झटके (दौरे) आना या अत्यधिक सुस्ती",
+        "Breathing very fast or chest pulling in (pasli chalna) / तेज सांस चलना या पसli chalna"
+      ],
+      "home_care": [
+        "Give plenty of fluids: Breastmilk, formula, ORS, coconut water or plain water / पर्याप्त मात्रा में तरल पदार्थ पिलाएं",
+        "Tepid sponging with normal lukewarm tap water (DO NOT use ice water or alcohol) / सामान्य ताजे पानी से बदन पोंछें (बर्फ का पानी न लगाएं)",
+        "Dress in light, breathable cotton clothes; do not wrap in heavy blankets / हल्के सूती कपड़े पहनाएं, भारी रजाई/कंबल न ओढ़ाएं"
+      ],
+      "medicines": [
+        {
+          "id": "paracetamol",
+          "name": "Paracetamol (Acetaminophen)",
+          "brand_names": "Calpol, Crocin, Dolo, P-120, P-250",
+          "role": "First-line Fever & Mild Pain Reliever (प्राथमिक बुखार व दर्द निवारक)",
+          "is_first_line": true,
+          "min_age_months": 1,
+          "dosage_formula": {
+            "mg_per_kg_min": 10,
+            "mg_per_kg_max": 15,
+            "recommended_mg_per_kg": 15,
+            "interval_hours": "4 to 6 hours (har 4-6 ghante me)",
+            "max_doses_per_day": 4,
+            "max_mg_per_kg_per_day": 60
+          },
+          "formulations": [
+            {
+              "type": "drops",
+              "label_en": "Paediatric Drops (100 mg / ml)",
+              "label_hi": "ड्रॉप्स (शिशुओं के लिए - 100 mg / ml)",
+              "mg_per_ml": 100,
+              "suitable_for": "Infants 1 to 12 months (< 10 kg)",
+              "popular_brands": "Calpol Drops, Crocin Baby Drops, Dolo Drops"
+            },
+            {
+              "type": "syrup_120",
+              "label_en": "Junior Suspension / Syrup (120 mg / 5 ml)",
+              "label_hi": "सस्पेंशन/सिरप (120 mg / 5 ml)",
+              "mg_per_ml": 24,
+              "suitable_for": "Children 1 to 5 years (approx 8 - 18 kg)",
+              "popular_brands": "Calpol 120, Crocin 120, P-120"
+            },
+            {
+              "type": "syrup_250",
+              "label_en": "Forte / DS Suspension (250 mg / 5 ml)",
+              "label_hi": "डीएस सिरप (Forte DS - 250 mg / 5 ml)",
+              "mg_per_ml": 50,
+              "suitable_for": "Children over 4-5 years (> 15 kg)",
+              "popular_brands": "Calpol 250, Crocin 240 DS, Dolo 250"
+            },
+            {
+              "type": "tablet_500",
+              "label_en": "Adult Tablet (500 mg)",
+              "label_hi": "टैबलेट (500 mg - केवल बड़े बच्चों व वयस्कों के लिए)",
+              "mg_per_unit": 500,
+              "suitable_for": "Children > 12 years and adults (> 40 kg)",
+              "popular_brands": "Crocin 500, Dolo 500, Calpol 500"
+            }
+          ],
+          "warnings": [
+            "Never give more than 4 doses in 24 hours to prevent liver injury. / 24 घंटे में 4 बार से ज्यादा कभी न दें।",
+            "Always check the bottle strength (whether it is 120mg/5ml or 250mg/5ml DS) before giving! / दवा की शीशी पर 120mg है या 250mg, यह हमेशा ध्यान से देखकर ही नापें।",
+            "Use a medicine syringe or calibrated measuring cup, not a kitchen teaspoon. / हमेशा दवा के ढक्कन या सीरिंज से सही नापकर दें।"
+          ]
+        },
+        {
+          "id": "ibuprofen",
+          "name": "Ibuprofen",
+          "brand_names": "Brufen, Ibugesic",
+          "role": "Second-line for high persistent fever (> 6 months old only) (तेज बुखार में)",
+          "is_first_line": false,
+          "min_age_months": 6,
+          "dosage_formula": {
+            "mg_per_kg_min": 5,
+            "mg_per_kg_max": 10,
+            "recommended_mg_per_kg": 10,
+            "interval_hours": "6 to 8 hours (har 6-8 ghante me)",
+            "max_doses_per_day": 3,
+            "max_mg_per_kg_per_day": 30
+          },
+          "formulations": [
+            {
+              "type": "syrup_100",
+              "label_en": "Paediatric Suspension (100 mg / 5 ml)",
+              "label_hi": "सस्पेंशन (100 mg / 5 ml)",
+              "mg_per_ml": 20,
+              "suitable_for": "Children over 6 months",
+              "popular_brands": "Brufen Junior, Ibugesic 100"
+            }
+          ],
+          "warnings": [
+            "DO NOT give to infants under 6 months without direct pediatric order. / 6 महीने से छोटे बच्चों को न दें।",
+            "DO NOT give if child is dehydrated, vomiting continuously, or if Dengue fever is suspected. / उल्टी या डेंगू के संदेह में बिल्कुल न दें।",
+            "Always give with food or milk, never on an empty stomach. / हमेशा दूध या खाने के बाद दें।"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diarrhea",
+      "name_en": "Diarrhea & Loose Motion",
+      "name_hi": "दस्त व पतले दस्त (Diarrhea & Dehydration)",
+      "category": "digestive",
+      "icon": "fa-tint",
+      "color": "amber",
+      "description_en": "Frequent watery loose stools, causing rapid fluid and electrolyte loss in children.",
+      "description_hi": "बार-बार पानी जैसे पतले दस्त होना, जिससे शरीर में पानी और नमक की कमी (डिहाइड्रेशन) हो सकती है।",
+      "red_flags": [
+        "Blood or mucus in stool (Dysentery) / दस्त में खून या आंव आना",
+        "Sunken eyes, no tears when crying, dry mouth / आंखें धंसी हुई, रोने पर आंसू न आना, सूखा मुंह",
+        "Depressed soft spot (fontanelle) on infant head / बच्चे के सिर का तालू धंस जाना",
+        "Child unable to drink fluids or vomits everything / बच्चा पानी/दूध पीने में असमर्थ हो या लगातार उल्टी कर रहा हो",
+        "Excessive lethargy, floppiness, or unconsciousness / अत्यधिक बेहोशी या सुस्ती"
+      ],
+      "home_care": [
+        "Continue normal breastfeeding or formula feeding without stopping / स्तनपान बिल्कुल बंद न करें",
+        "Prepare fresh WHO-ORS packet in clean boiled & cooled water / 1 लीटर उबले-ठंडे पानी में 1 पैकेट ORS घोलें",
+        "Offer extra fluids: Coconut water, thin rice water (kanji), buttermilk (chhaachh) / नारियल पानी, चावल का मांड, छाछ दें",
+        "Do NOT give fruit juices, sweet sodas or glucose water as they worsen diarrhea / ज्यादा मीठे पेय या कोल्ड ड्रिंक्स न दें"
+      ],
+      "medicines": [
+        {
+          "id": "ors",
+          "name": "WHO Oral Rehydration Salts (ORS)",
+          "brand_names": "Electral, Prolyte, ORS WHO Formula",
+          "role": "Life-Saving Fluid Replacement (जीवनरक्षक घोल - सबसे जरूरी)",
+          "is_first_line": true,
+          "min_age_months": 0,
+          "dosage_rules": {
+            "under_2_years": "50 ml to 100 ml (approx 1/4 to 1/2 small cup) after every loose stool / हर दस्त के बाद 50 से 100 ml (आधा कप)",
+            "age_2_to_10_years": "100 ml to 200 ml (approx 1 cup) after every loose stool / हर दस्त के बाद 100 से 200 ml (एक कप)",
+            "older_and_adults": "200 ml to 400 ml after every loose stool / हर दस्त के बाद 1 से 2 कप"
+          },
+          "preparation_instructions": "Dissolve 1 complete sachet in exactly 1 Liter of clean drinking water. Stir well. Discard any leftover solution after 24 hours and make a fresh one.",
+          "preparation_instructions_hi": "1 पूरा पैकेट ORS ठीक 1 लीटर साफ पीने के पानी में अच्छी तरह घोलें। 24 घंटे के बाद बचा हुआ घोल फेंक दें और नया बनाएं।",
+          "warnings": [
+            "Do NOT boil the ORS water after adding powder. / पाउडर मिलाने के बाद पानी को न उबालें।",
+            "Feed slowly with a spoon or small sips. If child vomits, wait 10 minutes and feed spoon by spoon. / चम्मच से धीरे-धीरे पिलाएं।"
+          ]
+        },
+        {
+          "id": "zinc",
+          "name": "Zinc Supplementation",
+          "brand_names": "Zinconia, Zincovit Syrup, Z&D",
+          "role": "Reduces duration of diarrhea & strengthens gut immunity for next 2-3 months",
+          "is_first_line": true,
+          "min_age_months": 2,
+          "dosage_rules": {
+            "under_6_months": "10 mg elemental zinc once daily for 14 continuous days / 10 mg प्रतिदिन (14 दिनों तक लगातार)",
+            "above_6_months": "20 mg elemental zinc once daily for 14 continuous days / 20 mg प्रतिदिन (14 दिनों तक लगातार)"
+          },
+          "formulations": [
+            {
+              "type": "syrup_20",
+              "label_en": "Zinc Syrup (20 mg / 5 ml)",
+              "label_hi": "जिंक सिरप (20 mg / 5 ml)",
+              "mg_per_ml": 4,
+              "suitable_for": "Children of all ages",
+              "popular_brands": "Zinconia 20mg/5ml, Zincovit"
+            }
+          ],
+          "warnings": [
+            "Complete full 14-day course even if diarrhea stops after 2 days! / दस्त ठीक होने पर भी 14 दिन का कोर्स पूरा करें ताकि अगले 2-3 महीने दस्त न हो।",
+            "Give after feeds to prevent mild nausea. / दूध या भोजन के बाद दें।"
+          ]
+        },
+        {
+          "id": "probiotic",
+          "name": "Probiotic (Bacillus Clausii / Saccharomyces boulardii)",
+          "brand_names": "Enterogermina, Darolac, Econorm",
+          "role": "Restores healthy gut bacteria (आंतों के अच्छे बैक्टीरिया को बढ़ाता है)",
+          "is_first_line": false,
+          "min_age_months": 1,
+          "dosage_rules": {
+            "infants_and_children": "1 mini bottle (5 ml) or 1 sachet mixed in water/milk once or twice daily for 3-5 days"
+          },
+          "warnings": [
+            "Keep safe; can be mixed directly with room temperature milk or water."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cold_cough",
+      "name_en": "Common Cold, Cough & Congestion",
+      "name_hi": "सर्दी, जुकाम और खांसी (Cold, Cough & Runny Nose)",
+      "category": "respiratory",
+      "icon": "fa-head-side-cough",
+      "color": "sky",
+      "description_en": "Runny or blocked nose, sneezing, throat tickle, and mild cough, usually caused by viral upper respiratory infections.",
+      "description_hi": "नाक बहना या बंद होना, छींकें आना, गले में खराश और खांसी, जो आमतौर पर सामान्य वायरल जुकाम से होती है।",
+      "red_flags": [
+        "Rapid breathing or fast chest movements (Pasli chalna) / तेज-तेज सांस चलना या छाती धंसना",
+        "Wheezing, whistling sound while breathing, or barking seal cough / सांस लेते समय सीटी जैसी आवाज या घबराहट",
+        "Bluish tint on lips or tongue / होंठ या जीभ नीली पड़ना (तत्काल इमरजेंसी)",
+        "Persistent high fever > 3 days / 3 दिन से लगातार तेज बुखार"
+      ],
+      "home_care": [
+        "Saline nasal drops (0.9% salt water) in each nostril before sleeping and feeding to clear blocked nose / नाक खोलने के लिए सलाइन ड्रॉप्स डालें",
+        "Warm steam inhalation (for older kids under adult supervision) / भाप दिलाएं (सावधानी से)",
+        "Honey (1/2 to 1 teaspoon) for soothing cough - ONLY FOR CHILDREN OVER 1 YEAR / 1 साल से बड़े बच्चों को आधा चम्मच शहद दे सकते हैं (1 साल से छोटे को शहद कभी न दें!)",
+        "Warm soups, warm water, and adequate hydration / गुनगुना पानी और सूप पिलाएं"
+      ],
+      "medicines": [
+        {
+          "id": "nasal_saline",
+          "name": "Normal Saline Nasal Drops (0.9% w/v Sodium Chloride)",
+          "brand_names": "Nasoclear, Solspre, Otrivin Baby Saline Drops",
+          "role": "Safest nose decongestant for infants and babies (शिशुओं की बंद नाक खोलने का सबसे सुरक्षित उपाय)",
+          "is_first_line": true,
+          "min_age_months": 0,
+          "dosage_rules": {
+            "all_ages": "2 to 3 drops in each nostril 15 minutes before breastfeeding or bedtime, 3-4 times daily / दोनों नथुनों में 2-2 बूंद दूध पिलाने या सोने से 15 मिनट पहले डालें"
+          },
+          "warnings": [
+            "100% safe non-medicated saline drops; has no side effects. / यह सिर्फ नमकीन पानी है, इसका कोई साइड इफेक्ट नहीं होता।",
+            "DO NOT use adult medicated nasal sprays (like Otrivin adult xylometazoline) in infants/toddlers! / वयस्कों वाले तेज स्प्रे बच्चों को न डालें।"
+          ]
+        },
+        {
+          "id": "cetirizine",
+          "name": "Cetirizine (Anti-allergic)",
+          "brand_names": "Cetzine, Alerid, Zyrtec Syrup",
+          "role": "For excessive sneezing, runny nose, allergic cold & eye itching (छींकें, बहती नाक व एलर्जी के लिए)",
+          "is_first_line": false,
+          "min_age_months": 6,
+          "dosage_rules": {
+            "age_6_to_12_months": "2.5 mg once daily (Syrup 5mg/5ml -> 2.5 ml once daily at night)",
+            "age_1_to_2_years": "2.5 mg once or twice daily (Syrup 5mg/5ml -> 2.5 ml)",
+            "age_2_to_6_years": "2.5 mg to 5 mg once daily (Syrup 5mg/5ml -> 2.5 ml to 5 ml)",
+            "above_6_years": "5 mg to 10 mg once daily at bedtime"
+          },
+          "formulations": [
+            {
+              "type": "syrup_5",
+              "label_en": "Syrup Cetirizine (5 mg / 5 ml)",
+              "label_hi": "सिरप सिट्रिज़िन (5 mg / 5 ml)",
+              "mg_per_ml": 1,
+              "suitable_for": "Children over 6 months",
+              "popular_brands": "Cetzine Syrup, Alerid Syrup"
+            }
+          ],
+          "warnings": [
+            "May cause mild sleepiness/drowsiness; best given in the evening or night. / इससे हल्की नींद या सुस्ती आ सकती है, रात को देना बेहतर है।",
+            "Do not combine multiple cold medicines that already contain antihistamines. / एक साथ कई सर्दी की दवाएं न मिलाएं।"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vomiting",
+      "name_en": "Vomiting & Nausea",
+      "name_hi": "उल्टी और मतली (Vomiting & Nausea)",
+      "category": "digestive",
+      "icon": "fa-head-side-virus",
+      "color": "emerald",
+      "description_en": "Frequent throwing up, stomach irritation, or nausea following tummy infection or indigestion.",
+      "description_hi": "बार-बार उल्टी होना, जी मिचलाना या पेट का संक्रमण।",
+      "red_flags": [
+        "Vomiting green or bright yellow fluid (bilious vomiting - surgical emergency) / हरे या चमकीले पीले रंग की उल्टी होना",
+        "Vomiting blood or coffee-ground material / उल्टी में खून आना",
+        "Projectile (forceful spurting) vomiting in newborn infants / नवजात शिशु में दूर तक तेज धार से उल्टी होना",
+        "Head injury within 24-48 hours before vomiting / सिर में चोट लगने के बाद उल्टी होना",
+        "Severe abdominal swelling and tenderness / पेट में तेज सूजन या असहनीय दर्द"
+      ],
+      "home_care": [
+        "DO NOT give large amounts of liquids at once; give small sips (1 spoonful every 3 to 5 minutes) / एक साथ ढेर सारा पानी न दें, हर 3-5 मिनट में 1-1 चम्मच ORS दें",
+        "Give stomach 20-30 minutes rest immediately after a vomiting episode before offering sips / उल्टी होने के तुरंत बाद 20-30 मिनट पेट को आराम दें",
+        "Keep child sitting upright or head elevated, never flat on back while vomiting to avoid choking / उल्टी के समय बच्चे का सिर ऊंचा रखें या करवट दिलाएं"
+      ],
+      "medicines": [
+        {
+          "id": "ondansetron",
+          "name": "Ondansetron (Pediatric Anti-emetic)",
+          "brand_names": "Emeset, Ondem, Zofer",
+          "role": "Controls acute vomiting (डॉक्टर की सलाह पर उल्टी रोकने के लिए)",
+          "is_first_line": true,
+          "min_age_months": 6,
+          "dosage_formula": {
+            "mg_per_kg_min": 0.1,
+            "mg_per_kg_max": 0.15,
+            "recommended_mg_per_kg": 0.15,
+            "interval_hours": "8 hours (Maximum 2 to 3 times a day)",
+            "max_doses_per_day": 3
+          },
+          "formulations": [
+            {
+              "type": "syrup_2",
+              "label_en": "Syrup Ondansetron (2 mg / 5 ml)",
+              "label_hi": "सिरप ओन्डैनसेट्रॉन (2 mg / 5 ml)",
+              "mg_per_ml": 0.4,
+              "suitable_for": "Children over 6 months",
+              "popular_brands": "Emeset Syrup, Ondem Syrup"
+            },
+            {
+              "type": "drops_2",
+              "label_en": "Drops Ondansetron (2 mg / ml)",
+              "label_hi": "ड्रॉप्स ओन्डैनसेट्रॉन (2 mg / ml)",
+              "mg_per_ml": 2,
+              "suitable_for": "Infants 6-12 months",
+              "popular_brands": "Emeset Drops, Ondem Drops"
+            }
+          ],
+          "warnings": [
+            "Give 15-20 minutes BEFORE feeding or oral fluids so medicine is not thrown up. / दूध या पानी पिलाने से 15-20 मिनट पहले दें।",
+            "Consult pediatrician if vomiting does not stop after 2 doses. / 2 खुराक के बाद भी उल्टी न रुके तो तुरंत डॉक्टर को दिखाएं।"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stomach_pain",
+      "name_en": "Stomach Ache, Colic & Gas",
+      "name_hi": "पेट दर्द, गैस और मरोड़ (Stomach Pain & Infant Colic)",
+      "category": "digestive",
+      "icon": "fa-child",
+      "color": "indigo",
+      "description_en": "Cramping, abdominal discomfort, infantile colic (crying with clenched fists and bent knees), or gas bloating.",
+      "description_hi": "पेट में गैस, मरोड़, छोटे बच्चों में शाम के समय पेट दर्द और रोना (इन्फेंटाइल कोलिक)।",
+      "red_flags": [
+        "Severe pain localized to the right lower abdomen (suspected appendicitis) / पेट के निचले दाहिने हिस्से में तेज दर्द",
+        "Swelling or hardness in abdomen / पेट कड़ा या फूला हुआ होना",
+        "Child crying inconsolably with high fever or vomiting / तेज बुखार और उल्टी के साथ लगातार रोना",
+        "Blood in urine or stools / पेशाब या शौच में खून आना"
+      ],
+      "home_care": [
+        "Gentle clockwise massage on child tummy with warm coconut or mustard oil / हल्के हाथों से पेट की मालिश करें",
+        "Bicycle leg exercises to help pass trapped intestinal gas / बच्चे के पैरों को साइकिल की तरह मोड़कर गैस निकालने में मदद करें",
+        "Warm water bottle or warm cloth compress on abdomen / गुनगुने कपड़े की सिकाई करें",
+        "Burp baby thoroughly after every feed / हर बार दूध पिलाने के बाद डकार अवश्य दिलाएं"
+      ],
+      "medicines": [
+        {
+          "id": "simethicone",
+          "name": "Simethicone + Dill Oil + Fennel Oil",
+          "brand_names": "Colicaid, Woodwards Gripe Water, Bonnisan, Neopeptine",
+          "role": "Relieves gas bubbles and colic in infants (शिशुओं में गैस व पेट दर्द में राहत)",
+          "is_first_line": true,
+          "min_age_months": 0,
+          "dosage_rules": {
+            "infants_under_6_months": "5 to 10 drops 15 minutes before feed, up to 3-4 times daily / दूध से पहले 5 से 10 बूंदें",
+            "infants_6_to_12_months": "10 to 15 drops before feed / 10 से 15 बूंदें",
+            "children_over_1_year": "15 to 20 drops or 2.5 ml syrup / 2.5 ml सिरप"
+          },
+          "warnings": [
+            "CRITICAL WARNING: NEVER give Dicyclomine (Meftal-Spas) to babies under 6 months as it can cause sudden respiratory arrest (saans rukna)! / 6 महीने से छोटे बच्चों को मेफ्टाल-स्पास या डाइसाइक्लोमाइन कभी न दें!"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "allergy_itching",
+      "name_en": "Allergies, Skin Rashes & Itching",
+      "name_hi": "एलर्जी, त्वचा पर लाल दाने और खुजली (Allergies & Hives)",
+      "category": "skin",
+      "icon": "fa-allergies",
+      "color": "purple",
+      "description_en": "Itchy red bumps, hives (urticaria), mosquito/insect bites, or seasonal allergy flare-ups.",
+      "description_hi": "शरीर पर लाल चकत्ते (पित्ती), कीड़े/मच्छर के काटने से खुजली, या धूल-मिट्टी से एलर्जी।",
+      "red_flags": [
+        "Swelling of lips, tongue, face, or throat (ANAPHYLAXIS - LIFE THREATENING) / होंठ, जीभ, चेहरे या गले में सूजन आना (तुरंत 108 पर कॉल करें)",
+        "Difficulty breathing, hoarse voice, or severe coughing / सांस लेने में तकलीफ या घबराहट",
+        "Widespread purple or dark red spots that do not fade when pressed with a glass tumbler / त्वचा पर ऐसे चकत्ते जो दबाने पर सफेद न हों"
+      ],
+      "home_care": [
+        "Apply soothing Calamine lotion on itchy skin / खुजली वाली जगह पर कैलामाइन लोशन लगाएं",
+        "Use cool damp cloth compress on itchy patches / ठंडे साफ कपड़े से सिकाई करें",
+        "Keep child fingernails trimmed short to prevent skin scratch infections / बच्चे के नाखून छोटे काटें"
+      ],
+      "medicines": [
+        {
+          "id": "calamine",
+          "name": "Calamine Lotion",
+          "brand_names": "Caladryl, Lacto Calamine",
+          "role": "Topical soothing agent for skin rashes & insect bites (त्वचा पर लगाने वाला ठंडक व खुजली रोधी लोशन)",
+          "is_first_line": true,
+          "min_age_months": 0,
+          "dosage_rules": {
+            "all_ages": "Apply thin layer gently over affected skin 2 to 3 times daily. External use only."
+          },
+          "warnings": [
+            "Do NOT apply inside eyes, mouth, or on open bleeding wounds / आंखों या खुले घाव पर न लगाएं।"
+          ]
+        },
+        {
+          "id": "cetirizine_allergy",
+          "name": "Cetirizine Syrup",
+          "brand_names": "Cetzine, Alerid",
+          "role": "Oral antihistamine for severe itching & hives (मुंह से लेने वाली एलर्जी रोधी दवा)",
+          "is_first_line": true,
+          "min_age_months": 6,
+          "dosage_rules": {
+            "age_6_to_12_months": "2.5 mg once daily at night (2.5 ml of 5mg/5ml syrup)",
+            "age_1_to_2_years": "2.5 mg once or twice daily",
+            "age_2_to_6_years": "2.5 mg to 5 mg once daily (2.5 to 5 ml of 5mg/5ml syrup)",
+            "above_6_years": "5 mg to 10 mg once daily at bedtime"
+          },
+          "warnings": [
+            "Best given at night as it may cause slight drowsiness / रात को देना उत्तम है।"
+          ]
+        }
+      ]
+    }
+  ],
+  "critical_universal_warnings": [
+    "NEVER give Aspirin (Disprin/Ecosprin) to any child or teenager under 16 years old due to the risk of Reye Syndrome (fatal liver and brain swelling)! / 16 साल से छोटे बच्चों को एस्पिरिन (डिस्प्रिन) कभी न दें, इससे जानलेवा रेये सिंड्रोम का खतरा होता है!",
+    "Babies younger than 3 months old with any fever or illness must be seen by a doctor immediately without home trial. / 3 महीने से छोटे बच्चे को कोई भी दवा खुद से न दें, तुरंत डॉक्टर के पास जाएं।",
+    "Always use the graduated measuring syringe or cap provided with the bottle, not regular kitchen spoons, to measure exact milliliters. / दवा नापने के लिए हमेशा दवा के साथ मिले ढक्कन या सीरिंज का प्रयोग करें।"
+  ]
+};
+
+function clientEstimateChildWeight(ageInYears) {
+  if (ageInYears <= 0.25) return 4.5;
+  if (ageInYears <= 0.5) return 6.5;
+  if (ageInYears <= 1.0) return 9.0;
+  if (ageInYears <= 5.0) return Math.round(((ageInYears + 4) * 2) * 10) / 10;
+  if (ageInYears <= 12.0) return Math.round(((ageInYears * 3) + 3) * 10) / 10;
+  return 60.0;
+}
+
+function clientFormatSpoonMeasure(ml) {
+  if (ml <= 1.5) return ml.toFixed(1) + ' ml (Use calibrated dropper)';
+  if (Math.abs(ml - 2.5) <= 0.3) return ml.toFixed(1) + ' ml (~Half teaspoon / 1/2 tsp)';
+  if (Math.abs(ml - 5.0) <= 0.3) return ml.toFixed(1) + ' ml (~1 full 5ml teaspoon)';
+  if (Math.abs(ml - 7.5) <= 0.3) return ml.toFixed(1) + ' ml (~1.5 teaspoons)';
+  if (Math.abs(ml - 10.0) <= 0.4) return ml.toFixed(1) + ' ml (~2 full teaspoons)';
+  return ml.toFixed(1) + ' ml (Measure using bottle cap or oral syringe)';
+}
+
+function clientCalculateDosage(diseaseId, ageYears, ageMonths, weightKg, tempF, gender, isPregnant, trimester, isBreastfeeding, comorbidities) {
+  const totalMonths = (ageYears * 12) + ageMonths;
+  const totalYears = totalMonths / 12.0;
+  let weightWasEstimated = false;
+  if (!weightKg || weightKg <= 0) {
+    weightKg = clientEstimateChildWeight(totalYears);
+    weightWasEstimated = true;
+  }
+  
+  const disease = OFFLINE_DB.diseases.find(d => d.id === diseaseId);
+  const criticalAlerts = [];
+  const specialAdvisories = [];
+
+  if (totalMonths < 3) {
+    criticalAlerts.push({
+      type: 'danger',
+      title: 'Emergency Infant Alert (< 3 Months)',
+      message: 'Infants younger than 3 months must NEVER be self-medicated. Any fever (>100.4°F) or severe symptom requires immediate consultation with a certified pediatrician/hospital.'
+    });
+  }
+  if (tempF && tempF >= 102.0) {
+    criticalAlerts.push({
+      type: 'warning',
+      title: 'High Fever Alert (>= 102°F)',
+      message: 'Body temperature is ' + tempF + '°F. Sponge body with normal lukewarm water. If fever persists, rush to hospital.'
+    });
+  }
+
+  if (isPregnant) {
+    const triLabel = trimester ? ' (Trimester ' + trimester + ')' : '';
+    specialAdvisories.push({
+      type: 'pregnancy',
+      title: 'Pregnancy Clinical Guidance' + triLabel,
+      message: 'Maternal fever must be brought down promptly as elevated temperature can impact fetal health. Paracetamol is the safest gold-standard medicine in pregnancy. NSAIDs (Ibuprofen, Aspirin) are strictly prohibited.'
+    });
+  }
+
+  if (comorbidities && comorbidities.includes('asthma')) {
+    specialAdvisories.push({
+      type: 'comorbidity',
+      title: 'Asthma Patient Safety Notice',
+      message: 'Patients with asthma must strictly avoid NSAIDs (such as Ibuprofen and Aspirin) as they can trigger severe bronchospasms and acute asthma attacks. Paracetamol is safe to use.'
+    });
+  }
+  if (comorbidities && comorbidities.includes('diabetes')) {
+    specialAdvisories.push({
+      type: 'comorbidity',
+      title: 'Diabetes Care Notice',
+      message: 'Choose sugar-free syrup formulations. Illness and fever commonly cause temporary blood glucose spikes; monitor your sugar levels regularly.'
+    });
+  }
+
+  const prescribedMeds = [];
+  (disease.medicines || []).forEach(med => {
+    if (totalMonths < (med.min_age_months || 0)) return;
+    
+    let isContraindicated = false;
+    let contraReason = '';
+    let pregStatus = isPregnant ? 'SAFE' : 'STANDARD';
+
+    if (isPregnant) {
+      if (med.id === 'ibuprofen') {
+        isContraindicated = true;
+        contraReason = 'STRICTLY PROHIBITED IN PREGNANCY: NSAIDs increase the risk of miscarriage in early pregnancy and cause premature closure of the fetal ductus arteriosus and low amniotic fluid (oligohydramnios) in the third trimester.';
+        pregStatus = 'STRICTLY CONTRAINDICATED';
+      } else if (med.id === 'paracetamol') {
+        pregStatus = 'SAFE IN PREGNANCY (Gold Standard Choice)';
+      }
+    }
+
+    if (comorbidities && comorbidities.includes('asthma') && med.id === 'ibuprofen') {
+      isContraindicated = true;
+      contraReason = 'CONTRAINDICATED IN ASTHMA: NSAIDs like Ibuprofen can trigger severe, potentially life-threatening bronchospasm.';
+    }
+
+    const medResult = {
+      id: med.id,
+      name: med.name,
+      brand_names: med.brand_names,
+      role: med.role,
+      is_first_line: med.is_first_line,
+      is_contraindicated: isContraindicated,
+      contraindication_reason: contraReason,
+      pregnancy_status: pregStatus,
+      warnings: med.warnings || [],
+      formulations_calculated: []
+    };
+    
+    if (med.dosage_formula) {
+      const f = med.dosage_formula;
+      let minMg = Math.round(weightKg * f.mg_per_kg_min * 10) / 10;
+      let recMg = Math.round(weightKg * f.recommended_mg_per_kg * 10) / 10;
+      let maxMg = Math.round(weightKg * f.mg_per_kg_max * 10) / 10;
+      
+      if (med.id === 'paracetamol') {
+        recMg = Math.min(recMg, 650.0);
+        maxMg = Math.min(maxMg, 650.0);
+      }
+      medResult.dose_mg = {
+        recommended: recMg,
+        range_min: minMg,
+        range_max: maxMg,
+        interval: f.interval_hours,
+        max_doses_per_day: f.max_doses_per_day
+      };
+      
+      (med.formulations || []).forEach(form => {
+        if (form.mg_per_ml) {
+          const recMl = Math.round((recMg / form.mg_per_ml) * 10) / 10;
+          const minMl = Math.round((minMg / form.mg_per_ml) * 10) / 10;
+          const maxMl = Math.round((maxMg / form.mg_per_ml) * 10) / 10;
+          medResult.formulations_calculated.push({
+            type: form.type,
+            label_en: form.label_en,
+            label_hi: form.label_hi,
+            strength: form.mg_per_ml + ' mg/ml',
+            dose_ml: recMl,
+            range_ml: minMl + ' - ' + maxMl + ' ml',
+            measure_guide: clientFormatSpoonMeasure(recMl),
+            popular_brands: form.popular_brands || '',
+            suitable_for: form.suitable_for || ''
+          });
+        } else if (form.mg_per_unit && (totalYears >= 12 || weightKg >= 35)) {
+          const units = Math.round(recMg / form.mg_per_unit);
+          medResult.formulations_calculated.push({
+            type: form.type,
+            label_en: form.label_en,
+            label_hi: form.label_hi,
+            dose_tablet: units + ' tablet(s)',
+            popular_brands: form.popular_brands || '',
+            suitable_for: form.suitable_for || ''
+          });
+        }
+      });
+    } else if (med.dosage_rules) {
+      const r = med.dosage_rules;
+      let specificDose = '';
+      if (med.id === 'ors') {
+        specificDose = totalYears < 2.0 ? r.under_2_years : (totalYears <= 10.0 ? r.age_2_to_10_years : r.older_and_adults);
+      } else if (med.id === 'zinc') {
+        const recMl = totalMonths < 6 ? 2.5 : 5.0;
+        specificDose = totalMonths < 6 ? r.under_6_months : r.above_6_months;
+        medResult.formulations_calculated.push({
+          type: 'syrup_20',
+          label_en: 'Zinc Syrup (20 mg / 5 ml)',
+          label_hi: 'जिंक सिरप (20 mg / 5 ml)',
+          dose_ml: recMl,
+          measure_guide: clientFormatSpoonMeasure(recMl),
+          popular_brands: 'Zinconia, Zincovit'
+        });
+      } else if (med.id.includes('cetirizine')) {
+        const recMl = totalMonths < 12 ? 2.5 : (totalYears <= 2.0 ? 2.5 : (totalYears <= 6.0 ? 2.5 : 5.0));
+        specificDose = totalMonths < 12 ? r.age_6_to_12_months : (totalYears <= 2.0 ? r.age_1_to_2_years : (totalYears <= 6.0 ? r.age_2_to_6_years : r.above_6_years));
+        medResult.formulations_calculated.push({
+          type: 'syrup_5',
+          label_en: 'Syrup Cetirizine (5 mg / 5 ml)',
+          label_hi: 'सिरप सिट्रिज़िन (5 mg / 5 ml)',
+          dose_ml: recMl,
+          measure_guide: clientFormatSpoonMeasure(recMl),
+          popular_brands: 'Cetzine, Alerid'
+        });
+      } else if (med.id === 'nasal_saline') {
+        specificDose = r.all_ages;
+      } else if (med.id === 'simethicone') {
+        specificDose = totalMonths < 6 ? r.infants_under_6_months : (totalMonths <= 12 ? r.infants_6_to_12_months : r.children_over_1_year);
+      } else if (med.id === 'calamine') {
+        specificDose = r.all_ages;
+      }
+      medResult.rule_dose = specificDose;
+      if (med.preparation_instructions) {
+        medResult.preparation = {
+          en: med.preparation_instructions,
+          hi: med.preparation_instructions_hi || med.preparation_instructions
+        };
+      }
+    }
+    prescribedMeds.push(medResult);
+  });
+
+  return {
+    disease: {
+      id: disease.id,
+      name_en: disease.name_en,
+      name_hi: disease.name_hi,
+      description_en: disease.description_en,
+      description_hi: disease.description_hi,
+      icon: disease.icon,
+      color: disease.color,
+      red_flags: disease.red_flags || [],
+      home_care: disease.home_care || []
+    },
+    patient: {
+      age_years: ageYears,
+      age_months: ageMonths,
+      total_years: Math.round(totalYears * 100) / 100,
+      total_months: totalMonths,
+      weight_kg: weightKg,
+      weight_was_estimated: weightWasEstimated,
+      temperature_f: tempF,
+      gender: gender,
+      is_pregnant: isPregnant,
+      trimester: trimester,
+      is_breastfeeding: isBreastfeeding,
+      comorbidities: comorbidities
+    },
+    critical_alerts: criticalAlerts,
+    special_advisories: specialAdvisories,
+    medicines: prescribedMeds
+  };
+}
+
+// State
+let currentLang = 'en'; // English is now default for easy customer reading!
+let allDiseases = [];
+let currentCalculationResult = null;
+
+// Initial Setup
+document.addEventListener('DOMContentLoaded', async () => {
+  setupLanguageToggle();
+  await loadDiseases();
+  
+  // Set default initial state for 1.5 year old child
+  setAgePreset(1, 6, 'male');
+  
+  // Trigger initial calculation
+  setTimeout(() => {
+    handleCalculate(null);
+  }, 300);
+});
+
+// Setup Language Toggle
+function setupLanguageToggle() {
+  const btn = document.getElementById('langToggleBtn');
+  const btnText = document.getElementById('langBtnText');
+  
+  btn.addEventListener('click', () => {
+    currentLang = currentLang === 'en' ? 'hi' : 'en';
+    btnText.textContent = currentLang === 'en' ? 'हिंदी में देखें' : 'View in English';
+    renderDiseaseGrid();
+    if (currentCalculationResult) {
+      renderResults(currentCalculationResult);
+    }
+  });
+}
+
+// Load Diseases from Backend
+async function loadDiseases() {
+  try {
+    allDiseases = OFFLINE_DB.diseases;
+    renderDiseaseGrid();
+  } catch (err) {
+    console.error('Failed to load diseases:', err);
+  }
+}
+
+// Render Disease Grid Cards
+function renderDiseaseGrid() {
+  const grid = document.getElementById('diseaseGrid');
+  if (!grid || !allDiseases.length) return;
+  
+  const selectedId = document.getElementById('selectedDiseaseId').value;
+  grid.innerHTML = '';
+  
+  allDiseases.forEach(d => {
+    const isSelected = d.id === selectedId;
+    const name = currentLang === 'en' ? d.name_en : d.name_hi;
+    
+    const card = document.createElement('div');
+    card.className = `disease-card p-3 rounded-xl border ${isSelected ? 'active border-teal-600 bg-teal-50 ring-2 ring-teal-500/20' : 'border-slate-200 bg-white hover:border-slate-300'} flex items-center space-x-2.5 shadow-2xs`;
+    card.onclick = () => selectDisease(d.id);
+    
+    card.innerHTML = `
+      <div class="disease-icon w-8 h-8 rounded-lg ${isSelected ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm flex-shrink-0 transition">
+        <i class="fa-solid ${d.icon}"></i>
+      </div>
+      <div class="overflow-hidden">
+        <div class="text-xs font-bold text-slate-800 truncate">${name}</div>
+        <div class="text-2xs text-slate-400 capitalize truncate">${d.category}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// Select Disease
+function selectDisease(id) {
+  document.getElementById('selectedDiseaseId').value = id;
+  renderDiseaseGrid();
+  
+  // Toggle temperature field if fever is selected
+  const tempWrapper = document.getElementById('temperatureFieldWrapper');
+  if (tempWrapper) {
+    tempWrapper.style.display = (id === 'fever') ? 'block' : 'none';
+  }
+}
+
+// Gender Change Handler
+function onGenderChange() {
+  const gender = document.querySelector('input[name="gender"]:checked')?.value || 'male';
+  
+  // Highlight active radio card
+  document.querySelectorAll('.gender-btn').forEach(btn => {
+    const radio = btn.querySelector('input[type="radio"]');
+    if (radio.checked) {
+      btn.classList.add('border-teal-600', 'bg-teal-50', 'text-teal-900');
+      btn.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+    } else {
+      btn.classList.remove('border-teal-600', 'bg-teal-50', 'text-teal-900');
+      btn.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+    }
+  });
+
+  checkPregnancyEligibility();
+}
+
+// Check Pregnancy Section Visibility (Female & Age >= 12)
+function checkPregnancyEligibility() {
+  const gender = document.querySelector('input[name="gender"]:checked')?.value || 'male';
+  const ageYears = parseFloat(document.getElementById('ageYears').value) || 0;
+  const wrapper = document.getElementById('pregnancySectionWrapper');
+  
+  if (gender === 'female' && ageYears >= 12) {
+    wrapper.classList.remove('hidden');
+  } else {
+    wrapper.classList.add('hidden');
+    document.getElementById('isPregnant').checked = false;
+    document.getElementById('isBreastfeeding').checked = false;
+    document.getElementById('trimesterWrapper').classList.add('hidden');
+  }
+}
+
+// Pregnancy Checkbox Toggle
+function onPregnancyToggle() {
+  const isChecked = document.getElementById('isPregnant').checked;
+  const triWrapper = document.getElementById('trimesterWrapper');
+  if (isChecked) {
+    triWrapper.classList.remove('hidden');
+  } else {
+    triWrapper.classList.add('hidden');
+  }
+}
+
+// Set Age Preset
+function setAgePreset(years, months, gender = 'male', isPregnant = false) {
+  document.getElementById('ageYears').value = years;
+  document.getElementById('ageMonths').value = months;
+  
+  // Set gender
+  const radio = document.querySelector(`input[name="gender"][value="${gender}"]`);
+  if (radio) {
+    radio.checked = true;
+    onGenderChange();
+  }
+  
+  // Set pregnancy if applicable
+  if (isPregnant && gender === 'female') {
+    const pregBox = document.getElementById('isPregnant');
+    pregBox.checked = true;
+    onPregnancyToggle();
+  }
+  
+  autoUpdateWeight(true);
+}
+
+// WHO & Clinical Weight Estimator Formula
+function autoUpdateWeight(force = false) {
+  const yrs = parseFloat(document.getElementById('ageYears').value) || 0;
+  const mo = parseFloat(document.getElementById('ageMonths').value) || 0;
+  const totalYears = yrs + (mo / 12.0);
+  
+  let estimatedWeight = 11.0;
+  if (totalYears <= 0.25) estimatedWeight = 4.5;
+  else if (totalYears <= 0.5) estimatedWeight = 6.5;
+  else if (totalYears <= 1.0) estimatedWeight = 9.0;
+  else if (totalYears <= 5.0) estimatedWeight = Math.round(((totalYears + 4) * 2) * 10) / 10;
+  else if (totalYears <= 12.0) estimatedWeight = Math.round(((totalYears * 3) + 3) * 10) / 10;
+  else estimatedWeight = 60.0;
+  
+  const weightInput = document.getElementById('patientWeight');
+  if (force || !weightInput.value || weightInput.value <= 0) {
+    weightInput.value = estimatedWeight;
+  }
+  
+  const notice = document.getElementById('weightEstimatorNotice');
+  if (notice) {
+    notice.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> <span>Standard WHO estimated weight for ${totalYears.toFixed(1)} yrs is ~${estimatedWeight} kg</span>`;
+  }
+}
+
+// Calculate Dosage
+async function handleCalculate(e) {
+  if (e) e.preventDefault();
+  
+  const diseaseId = document.getElementById('selectedDiseaseId').value;
+  const ageYears = parseInt(document.getElementById('ageYears').value) || 0;
+  const ageMonths = parseInt(document.getElementById('ageMonths').value) || 0;
+  const weightKg = parseFloat(document.getElementById('patientWeight').value) || 0;
+  const tempVal = document.getElementById('bodyTemp').value;
+  const tempF = tempVal ? parseFloat(tempVal) : null;
+  
+  const gender = document.querySelector('input[name="gender"]:checked')?.value || 'male';
+  const isPregnant = document.getElementById('isPregnant')?.checked || false;
+  const trimester = isPregnant ? (parseInt(document.querySelector('input[name="trimester"]:checked')?.value) || 2) : null;
+  const isBreastfeeding = document.getElementById('isBreastfeeding')?.checked || false;
+  const comorbidityVal = document.getElementById('preExistingCondition')?.value || 'none';
+  const comorbidities = [comorbidityVal];
+
+  const submitBtn = document.getElementById('calculateBtn');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Calculating Safe Dose...</span>`;
+  
+  try {
+    const calcData = clientCalculateDosage(diseaseId, ageYears, ageMonths, weightKg, tempF, gender, isPregnant, trimester, isBreastfeeding, comorbidities);
+    currentCalculationResult = calcData;
+    renderResults(calcData);
+      
+      // Scroll smoothly on mobile
+      if (window.innerWidth < 1024) {
+        document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      alert(result.message || 'Calculation error');
+    }
+  } catch (err) {
+    console.error('Error during calculation:', err);
+    alert('Server connection error. Please try again.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
+}
+
+// Render Results
+function renderResults(data) {
+  document.getElementById('emptyState').classList.add('hidden');
+  const container = document.getElementById('resultsContainer');
+  container.classList.remove('hidden');
+  
+  // 1. Header Badges
+  const disease = data.disease;
+  document.getElementById('resultDiseaseName').textContent = currentLang === 'en' ? disease.name_en : disease.name_hi;
+  document.getElementById('resultDiseaseDesc').textContent = currentLang === 'en' ? disease.description_en : disease.description_hi;
+  document.getElementById('resultDiseaseIcon').className = `fa-solid ${disease.icon}`;
+  
+  // Patient Badges
+  const p = data.patient;
+  
+  // Gender
+  const genderText = p.gender ? p.gender.charAt(0).toUpperCase() + p.gender.slice(1) : 'Male';
+  document.getElementById('resultGenderText').textContent = genderText;
+  
+  let ageString = '';
+  if (p.age_years > 0 && p.age_months > 0) {
+    ageString = `${p.age_years} Yr ${p.age_months} Mo (${p.total_years} Yrs)`;
+  } else if (p.age_years > 0) {
+    ageString = `${p.age_years} Years`;
+  } else {
+    ageString = `${p.age_months} Months`;
+  }
+  document.getElementById('resultAgeBadge').textContent = ageString;
+  
+  const estNotice = p.weight_was_estimated ? ' (Est.)' : '';
+  document.getElementById('resultWeightBadge').textContent = `${p.weight_kg} kg${estNotice}`;
+  
+  // Pregnancy Badge
+  const pregBadge = document.getElementById('resultPregnancyBadge');
+  if (p.is_pregnant) {
+    pregBadge.classList.remove('hidden');
+    pregBadge.classList.add('flex');
+    const triLabel = p.trimester ? ` (Trimester ${p.trimester})` : '';
+    document.getElementById('resultPregnancyText').textContent = `Pregnant${triLabel}`;
+  } else {
+    pregBadge.classList.add('hidden');
+    pregBadge.classList.remove('flex');
+  }
+
+  // Comorbidity Badge
+  const comorbBadge = document.getElementById('resultComorbidityBadge');
+  const primaryComorb = p.comorbidities && p.comorbidities[0] !== 'none' ? p.comorbidities[0] : null;
+  if (primaryComorb) {
+    comorbBadge.classList.remove('hidden');
+    comorbBadge.classList.add('flex');
+    const names = {
+      'heart_disease': 'Heart Condition',
+      'asthma': 'Asthma Patient',
+      'diabetes': 'Diabetic Patient',
+      'hypertension': 'Hypertension',
+      'liver_disease': 'Liver Condition',
+      'kidney_disease': 'Kidney Disease',
+      'stomach_ulcers': 'Stomach Ulcers'
+    };
+    document.getElementById('resultComorbidityText').textContent = names[primaryComorb] || primaryComorb;
+  } else {
+    comorbBadge.classList.add('hidden');
+    comorbBadge.classList.remove('flex');
+  }
+
+  // Temperature Badge
+  const tempBadge = document.getElementById('resultTempBadge');
+  if (p.temperature_f) {
+    tempBadge.classList.remove('hidden');
+    tempBadge.classList.add('flex');
+    document.getElementById('resultTempText').textContent = `${p.temperature_f}°F`;
+  } else {
+    tempBadge.classList.add('hidden');
+    tempBadge.classList.remove('flex');
+  }
+  
+  // 2. Special Clinical Advisories (Pregnancy & Comorbidities)
+  const specialBox = document.getElementById('specialAdvisoriesBox');
+  if (data.special_advisories && data.special_advisories.length > 0) {
+    specialBox.classList.remove('hidden');
+    specialBox.innerHTML = '';
+    data.special_advisories.forEach(adv => {
+      const isPreg = adv.type === 'pregnancy';
+      const bgClass = isPreg ? 'bg-pink-50 border-pink-400 text-pink-950' : 'bg-amber-50 border-amber-400 text-amber-950';
+      const iconClass = isPreg ? 'fa-person-pregnant text-pink-600' : 'fa-shield-virus text-amber-600';
+      
+      specialBox.innerHTML += `
+        <div class="p-4 rounded-xl border-l-4 ${bgClass} shadow-sm">
+          <div class="flex items-start gap-3">
+            <i class="fa-solid ${iconClass} text-xl mt-0.5 flex-shrink-0"></i>
+            <div>
+              <div class="font-bold text-sm text-slate-900">${adv.title}</div>
+              <div class="text-xs mt-1 leading-relaxed">${adv.message}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    specialBox.classList.add('hidden');
+  }
+
+  // 3. Critical Alerts Box
+  const alertsBox = document.getElementById('criticalAlertsBox');
+  if (data.critical_alerts && data.critical_alerts.length > 0) {
+    alertsBox.classList.remove('hidden');
+    alertsBox.innerHTML = '';
+    data.critical_alerts.forEach(a => {
+      const isDanger = a.type === 'danger';
+      const bg = isDanger ? 'bg-rose-50 border-rose-400 text-rose-900' : 'bg-amber-50 border-amber-400 text-amber-900';
+      const icon = isDanger ? 'fa-circle-exclamation text-rose-600' : 'fa-triangle-exclamation text-amber-600';
+      
+      alertsBox.innerHTML += `
+        <div class="p-4 rounded-xl border-l-4 ${bg} shadow-sm">
+          <div class="flex items-start gap-2.5">
+            <i class="fa-solid ${icon} text-lg mt-0.5 flex-shrink-0"></i>
+            <div>
+              <div class="font-bold text-sm">${a.title}</div>
+              <div class="text-xs mt-0.5 leading-relaxed">${a.message}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    alertsBox.classList.add('hidden');
+  }
+  
+  // 4. Recommended Medicines Container
+  const medContainer = document.getElementById('medicinesContainer');
+  medContainer.innerHTML = '';
+  
+  data.medicines.forEach(m => {
+    const isContraindicated = m.is_contraindicated;
+    
+    // Status Badges
+    let badgesHtml = '';
+    if (isContraindicated) {
+      badgesHtml += `<span class="bg-rose-600 text-white text-2xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-ban"></i> STRICTLY PROHIBITED</span>`;
+    } else {
+      if (m.is_first_line) {
+        badgesHtml += `<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 text-2xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-2xs"><i class="fa-solid fa-star text-amber-500"></i> First Choice</span>`;
+      } else {
+        badgesHtml += `<span class="bg-slate-100 text-slate-700 text-2xs font-semibold px-2.5 py-0.5 rounded-full">Alternative</span>`;
+      }
+      
+      if (p.is_pregnant && m.pregnancy_status && m.pregnancy_status.includes('SAFE')) {
+        badgesHtml += `<span class="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-2xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs"><i class="fa-solid fa-shield-heart text-pink-100"></i> Safe in Pregnancy</span>`;
+      }
+    }
+      
+    // Dosage block
+    let dosageHtml = '';
+    if (isContraindicated) {
+      dosageHtml = `
+        <div class="bg-rose-50/90 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 mb-4 shadow-2xs">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg flex-shrink-0 shadow-xs">
+              <i class="fa-solid fa-ban"></i>
+            </div>
+            <div>
+              <strong class="text-xs font-black text-rose-950 uppercase tracking-wider block">DO NOT ADMINISTER THIS MEDICINE:</strong>
+              <p class="text-xs sm:text-sm text-rose-900 mt-1 leading-relaxed font-semibold">
+                ${m.contraindication_reason}
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (m.dose_mg) {
+      dosageHtml = `
+        <div class="bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 border border-teal-200/90 rounded-2xl p-4 sm:p-5 mb-4 shadow-2xs">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <span class="text-2xs font-black uppercase tracking-wider text-teal-800 bg-teal-100/80 px-2.5 py-0.5 rounded-md border border-teal-200">
+              <i class="fa-solid fa-bullseye text-teal-600 mr-1"></i> Recommended Single Dose
+            </span>
+            <span class="text-2xs font-bold text-teal-700 bg-white/80 px-2.5 py-0.5 rounded-md border border-teal-100">
+              Safe Range: ${m.dose_mg.range_min} mg - ${m.dose_mg.range_max} mg
+            </span>
+          </div>
+          
+          <div class="flex items-baseline gap-2 mt-1">
+            <span class="text-3xl sm:text-4xl font-black text-teal-950">${m.dose_mg.recommended}</span>
+            <span class="text-sm font-extrabold text-teal-800">mg per dose</span>
+          </div>
+
+          <div class="mt-3.5 pt-3 border-t border-teal-200/70 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="flex items-center gap-2 text-slate-800 font-bold">
+              <div class="w-7 h-7 rounded-lg bg-white text-teal-600 flex items-center justify-center shadow-2xs border border-teal-100">
+                <i class="fa-regular fa-clock text-xs"></i>
+              </div>
+              <span>Interval: <strong class="text-teal-900">${m.dose_mg.interval}</strong></span>
+            </div>
+            <div class="flex items-center gap-2 text-rose-800 font-bold">
+              <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shadow-2xs border border-rose-200">
+                <i class="fa-solid fa-shield-halved text-xs"></i>
+              </div>
+              <span>Max ${m.dose_mg.max_doses_per_day} doses/24h (Max: ${m.dose_mg.max_daily_mg} mg)</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (m.rule_dose) {
+      dosageHtml = `
+        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-2xs">
+          <div class="flex items-center gap-2 text-2xs font-black text-amber-900 uppercase tracking-wider mb-1.5">
+            <i class="fa-solid fa-clipboard-check text-amber-600 text-sm"></i>
+            <span>Prescribed Dose & Schedule:</span>
+          </div>
+          <div class="text-sm font-bold text-amber-950 leading-relaxed">
+            ${m.rule_dose}
+          </div>
+        </div>
+      `;
+    }
+    
+    // Liquid Formulations Breakdown (ml translation)
+    let formsHtml = '';
+    if (!isContraindicated && m.formulations_calculated && m.formulations_calculated.length > 0) {
+      formsHtml = `
+        <div class="mt-4">
+          <div class="text-xs font-black text-slate-800 uppercase tracking-wide mb-2.5 flex items-center gap-2">
+            <i class="fa-solid fa-prescription-bottle-medical text-teal-600"></i>
+            <span>Available Bottle Strengths & Milliliters (ml) to Give:</span>
+          </div>
+          <div class="space-y-2.5">
+      `;
+      
+      m.formulations_calculated.forEach(f => {
+        let formIcon = 'fa-bottle-droplet text-emerald-600';
+        let iconBg = 'bg-emerald-50';
+        if (f.type === 'drops') {
+          formIcon = 'fa-eye-dropper text-teal-600';
+          iconBg = 'bg-teal-50';
+        } else if (f.type.includes('250') || f.type.includes('ds')) {
+          formIcon = 'fa-flask-vial text-indigo-600';
+          iconBg = 'bg-indigo-50';
+        } else if (f.type.includes('tablet')) {
+          formIcon = 'fa-tablets text-blue-600';
+          iconBg = 'bg-blue-50';
+        }
+
+        if (f.dose_ml) {
+          formsHtml += `
+            <div class="formulation-row p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-teal-300 flex flex-wrap justify-between items-center gap-3 shadow-2xs">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center text-lg flex-shrink-0 shadow-2xs">
+                  <i class="fa-solid ${formIcon}"></i>
+                </div>
+                <div>
+                  <div class="text-xs sm:text-sm font-extrabold text-slate-900">${f.label_en}</div>
+                  <div class="text-2xs text-slate-500 font-medium">${f.popular_brands ? `(e.g., ${f.popular_brands})` : ''} • ${f.suitable_for || ''}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-3.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-black text-base sm:text-lg shadow-2xs">${f.dose_ml} ml</span>
+                <div class="text-2xs font-bold text-slate-700 mt-1 flex items-center justify-end gap-1">
+                  <i class="fa-solid fa-spoon text-teal-600"></i>
+                  <span>${f.measure_guide}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (f.dose_tablet) {
+          formsHtml += `
+            <div class="formulation-row p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-indigo-300 flex flex-wrap justify-between items-center gap-3 shadow-2xs">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center text-lg flex-shrink-0 shadow-2xs">
+                  <i class="fa-solid ${formIcon}"></i>
+                </div>
+                <div>
+                  <div class="text-xs sm:text-sm font-extrabold text-slate-900">${f.label_en}</div>
+                  <div class="text-2xs text-slate-500 font-medium">${f.popular_brands ? `(e.g., ${f.popular_brands})` : ''}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-3.5 py-1 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-2xs">${f.dose_tablet}</span>
+                <div class="text-2xs text-slate-500 mt-1">${f.suitable_for}</div>
+              </div>
+            </div>
+          `;
+        }
+      });
+      
+      formsHtml += `</div></div>`;
+    }
+    
+    // Preparation Instructions (ORS, etc.)
+    let prepHtml = '';
+    if (m.preparation) {
+      prepHtml = `
+        <div class="mt-4 bg-emerald-50/80 border border-emerald-200/80 p-4 rounded-2xl text-xs sm:text-sm text-emerald-950 shadow-2xs">
+          <strong class="font-extrabold flex items-center gap-1.5 text-emerald-900 mb-1">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            Proper Preparation & Mixing Instructions:
+          </strong>
+          ${m.preparation.en}
+        </div>
+      `;
+    }
+    
+    // Warnings List
+    let warningsHtml = '';
+    if (m.warnings && m.warnings.length > 0) {
+      warningsHtml = `
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          <div class="text-2xs font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+            <span>Safety Checklist & Precautions:</span>
+          </div>
+          <ul class="text-2xs text-slate-600 space-y-1 list-disc list-inside font-medium">
+            ${m.warnings.map(w => `<li>${w}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    const card = document.createElement('div');
+    if (isContraindicated) {
+      card.className = 'dose-card-contraindicated rounded-3xl p-5 sm:p-6 border-2 border-rose-300 shadow-sm fade-in-up';
+    } else if (m.is_first_line) {
+      card.className = 'bg-white dose-card-first-line rounded-3xl p-5 sm:p-6 border-2 border-emerald-300 shadow-md fade-in-up';
+    } else {
+      card.className = 'bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm fade-in-up';
+    }
+
+    card.innerHTML = `
+      <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl ${isContraindicated ? 'bg-rose-100 text-rose-600' : 'bg-teal-50 text-teal-700'} flex items-center justify-center text-xl shadow-2xs flex-shrink-0">
+            <i class="fa-solid ${isContraindicated ? 'fa-ban' : 'fa-capsules'}"></i>
+          </div>
+          <div>
+            <h4 class="text-base sm:text-lg font-black text-slate-900 ${isContraindicated ? 'line-through opacity-70' : ''}">${m.name}</h4>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">
+              ${m.brand_names ? `<span class="font-bold text-slate-700">Brands:</span> ${m.brand_names}` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          ${badgesHtml}
+        </div>
+      </div>
+      
+      ${dosageHtml}
+      ${formsHtml}
+      ${prepHtml}
+      ${warningsHtml}
+    `;
+    
+    medContainer.appendChild(card);
+  });
+  
+  // 5. Home Care Tips
+  const homeCareList = document.getElementById('homeCareList');
+  homeCareList.innerHTML = '';
+  if (disease.home_care && disease.home_care.length > 0) {
+    disease.home_care.forEach(item => {
+      homeCareList.innerHTML += `<li>${item}</li>`;
+    });
+  }
+  
+  // 6. Red Flags Checklist
+  const redFlagsList = document.getElementById('redFlagsList');
+  redFlagsList.innerHTML = '';
+  if (disease.red_flags && disease.red_flags.length > 0) {
+    disease.red_flags.forEach(item => {
+      redFlagsList.innerHTML += `<li>${item}</li>`;
+    });
+  }
+}
+
+// WhatsApp Share Formatter
+function shareOnWhatsApp() {
+  if (!currentCalculationResult) return;
+  const d = currentCalculationResult;
+  const p = d.patient;
+  
+  let msg = `🏥 *SwasthyaCare - Safe Clinical Dosage Slip*\n`;
+  msg += `👤 *Patient*: Gender: ${p.gender.toUpperCase()} | Age: ${p.age_years}y ${p.age_months}m | Weight: ${p.weight_kg}kg\n`;
+  if (p.is_pregnant) msg += `🤰 *Status*: PREGNANT (Trimester ${p.trimester || 'Active'})\n`;
+  if (p.comorbidities && p.comorbidities[0] !== 'none') msg += `🩺 *Chronic Condition*: ${p.comorbidities[0].toUpperCase()}\n`;
+  msg += `🩺 *Illness*: ${d.disease.name_en}\n`;
+  if (p.temperature_f) msg += `🌡️ *Fever Temperature*: ${p.temperature_f}°F\n`;
+  msg += `----------------------------\n`;
+  
+  d.medicines.forEach(m => {
+    if (m.is_contraindicated) {
+      msg += `❌ *${m.name}*: PROHIBITED / CONTRAINDICATED\n`;
+      msg += `   Reason: ${m.contraindication_reason}\n\n`;
+    } else {
+      msg += `💊 *${m.name}* (${m.brand_names || ''})\n`;
+      if (m.dose_mg) {
+        msg += `• Recommended Dose: *${m.dose_mg.recommended} mg*\n`;
+        msg += `• Interval: ${m.dose_mg.interval} (Max ${m.dose_mg.max_doses_per_day} times/day)\n`;
+      }
+      if (m.formulations_calculated) {
+        m.formulations_calculated.forEach(f => {
+          if (f.dose_ml) {
+            msg += `  👉 ${f.label_en}: *${f.dose_ml} ml* (${f.measure_guide})\n`;
+          }
+        });
+      }
+      if (m.rule_dose) {
+        msg += `• Dose: ${m.rule_dose}\n`;
+      }
+      msg += `\n`;
+    }
+  });
+  
+  msg += `⚠️ *Notice*: For educational & first-aid reference. Always consult a certified physician/pediatrician.\n`;
+  msg += `📞 *Emergency*: 108 (Ambulance), 1098 (Childline)\n`;
+  
+  const encoded = encodeURIComponent(msg);
+  window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+}
+
+</script>
 </body>
 </html>
